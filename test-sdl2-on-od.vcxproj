@@ -152,7 +152,10 @@
     <Image Include="data\up.bmp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include=".gitignore" />
+    <None Include="main" />
     <None Include="Makefile" />
+    <None Include="README.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

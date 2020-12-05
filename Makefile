@@ -2,7 +2,7 @@
 OBJS = main.cpp
 
 #CXX specifies which compiler we're using
-#CXX = g++
+#CXX = mipsel-gcw0-linux-uclibc-g++
 
 #COMPILER_FLAGS specifies the additional compilation options we're using
 # -w suppresses all warnings
