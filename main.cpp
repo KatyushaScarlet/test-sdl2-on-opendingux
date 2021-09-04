@@ -14,6 +14,8 @@ and may not be redistributed without written permission.*/
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
 
+SDL_Haptic* HapticDevice;
+
 //Key press surfaces constants
 enum KeyPressSurfaces
 {
@@ -33,6 +35,9 @@ bool loadMedia();
 
 //Frees media and shuts down SDL
 void close();
+
+//Inital haptic devices
+void initHaptics();
 
 //Loads individual image
 SDL_Surface* loadSurface(std::string path);
@@ -144,6 +149,34 @@ void close()
 	SDL_Quit();
 }
 
+void initHaptics()
+{
+	if (SDL_InitSubSystem(SDL_INIT_HAPTIC) < 0)
+	{
+		printf("SDL force feedback initialisation failed (non-fatal): %s\n", SDL_GetError());
+	}
+
+	for (int i = 0; i < SDL_NumHaptics(); i++)
+	{
+		printf("Force feedback device %u: \"%s\"\n", i, SDL_HapticName(i));
+	}
+
+	if (SDL_NumHaptics() > 0)
+	{
+		HapticDevice = SDL_HapticOpen(0);
+		if (HapticDevice == NULL)
+		{
+			printf("SDL_HapticOpen(0) failed (non-fatal): %s\n", SDL_GetError());
+		}
+		else if (SDL_HapticRumbleInit(HapticDevice) != 0)
+		{
+			printf("SDL_HapticRumbleInit failed (non-fatal): %s\n", SDL_GetError());
+			SDL_HapticClose(HapticDevice);
+			HapticDevice = NULL;
+		}
+	}
+}
+
 SDL_Surface* loadSurface(std::string path)
 {
 	//Load image at specified path
@@ -166,13 +199,16 @@ int main(int argc, char* args[])
 	}
 	else
 	{
-		//Load media
+		//Inital haptic devices
 		if (!loadMedia())
 		{
 			printf("Failed to load media!\n");
 		}
 		else
 		{
+			//init haptic devices
+			initHaptics();
+
 			//Main loop flag
 			bool quit = false;
 
@@ -217,6 +253,28 @@ int main(int argc, char* args[])
 						case SDLK_RIGHT:
 							printf("right\n");
 							gCurrentSurface = gKeyPressSurfaces[KEY_PRESS_SURFACE_RIGHT];
+							break;
+
+						case SDLK_ESCAPE://SELECT
+							printf("exit\n");
+							close();
+							return 0;
+							break;
+
+						case SDLK_TAB://L1
+							printf("Start haptic rumble\n");
+							if (SDL_HapticRumblePlay(HapticDevice, 1 /* Strength, default=0.33f */, 10000 /* Time */) < 0)
+							{
+								printf("SDL_HapticRumblePlay failed: %s\n", SDL_GetError());
+							}
+							break;
+
+						case SDLK_BACKSPACE://R1
+							printf("Stop haptic rumble\n");
+							if (SDL_HapticRumbleStop(HapticDevice) < 0)
+							{
+								printf("SDL_HapticRumbleStop failed: %s\n", SDL_GetError());
+							}
 							break;
 
 						default:
